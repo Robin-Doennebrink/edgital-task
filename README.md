@@ -43,3 +43,10 @@ The edges of the road networks should be retrievable via an additional endpoint 
 1. The API framework to be used should be Flask or FastAPI, while the database is to be realized using Postgres.
 2. A README.md should document the application and the approach to the task.
 3. The solution must be containerized and readily executable using Docker-Compose.
+
+# Solution
+## Set-up dev environment
+- Create venv in root dir: `python -m venv ./venv`
+- Activate venv. Depends on OS: Linux: `source ./venv/bin/activate`
+- Install dependencies:  `pip install -r requirements.txt`
+- Install pre-commit hocks: `pre-commit install --hook-type commit-msg`
