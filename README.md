@@ -49,4 +49,3 @@ The edges of the road networks should be retrievable via an additional endpoint 
 - Create venv in root dir: `python -m venv ./venv`
 - Activate venv. Depends on OS: Linux: `source ./venv/bin/activate`
 - Install dependencies:  `pip install -r requirements.txt`
-- Install pre-commit hocks: `pre-commit install --hook-type commit-msg`
