@@ -1,3 +1,11 @@
+"""
+Description: Flask application for managing road networks.
+
+Author: Robin Dönnebrink
+Created: 13.05.2025
+Copyright: © 2025 Robin Dönnebrink
+"""
+
 from flask import Flask
 
 app = Flask(__name__)
