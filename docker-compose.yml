@@ -10,6 +10,12 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+  network-service:
+    build:
+      context: ./src
+    container_name: my-network-service
+    ports:
+      - "8000:8000"
 
 volumes:
   postgres_data:
