@@ -6,13 +6,21 @@ Created: 13.05.2025
 Copyright: © 2025 Robin Dönnebrink
 """
 
-from flask import Flask
+from database import app, db
+from models.road_network import RoadNetwork
+import logging
 
-app = Flask(__name__)
+logger = logging.getLogger("App")
+
+with app.app_context():
+    db.create_all()
+    logger.info("Created all models successfully")
+
+
 
 @app.route("/")
 def hello():
-    return "Hello, World!"
+    return RoadNetwork.query.all()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)

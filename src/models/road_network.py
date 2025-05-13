@@ -9,9 +9,9 @@ Copyright: © 2025 Robin Dönnebrink
 from sqlalchemy import  String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from models.base import Base
+from database import db
 
-class RoadNetwork(Base):
+class RoadNetwork(db.Model):
     __tablename__  = "road_network"
 
     id: Mapped[int] = mapped_column(primary_key=True)
