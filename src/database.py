@@ -1,5 +1,5 @@
 """
-Description: [Add module purpose here]
+Description: Set up the connection of SQLAlchemy to the postgres database.
 
 Author: Robin
 Created: 13.05.2025
