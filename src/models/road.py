@@ -1,7 +1,7 @@
 """
 Description: Model which represents a road.
 
-Author: Robin
+Author: Robin Dönnebrink
 Created: 14.05.2025
 Copyright: © 2025 Robin Dönnebrink
 """
@@ -12,17 +12,26 @@ from geoalchemy2 import Geometry
 from geoalchemy2.shape import from_shape, to_shape
 from shapely.geometry import mapping
 from shapely.geometry.base import BaseGeometry
-from sqlalchemy import Column, ForeignKey, ForeignKeyConstraint, Integer, func
+from sqlalchemy import Column, ForeignKeyConstraint, Integer
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm import relationship
 
 from database import db
-from models.road_network import RoadNetwork
 
 WGS84: Final[int] = 4326  # Use World Geodetic System 84
 
 
 class Road(db.Model):
+    """Model which represents a Road of a RoadNetwork with the following attributes:
+
+    - id: The primary key
+    - road_network_id: Stores the ID of the RoadNetwork it belongs to.
+    - road_network_version: Stores the version of the RoadNetwork it belongs to.
+    - coordinates: The geospatial data of this Road.
+    - properties: Additional properties to store for this Route.
+
+    """
+
     __tablename__ = "roads"
 
     id = Column(Integer, primary_key=True)
@@ -48,6 +57,15 @@ class Road(db.Model):
         coordinates: BaseGeometry,
         properties: dict[str, Any],
     ):
+        """
+        Creates and saves a new Road to the database.
+
+        Args:
+            road_network_id: The ID of the RoadNetwork it belongs to.
+            road_network_version:  the version of the RoadNetwork it belongs to.
+            coordinates:  The geospatial data of this Road.
+            properties: Additional properties to store for this Route.
+        """
         self.road_network_id = road_network_id
         self.coordinates = from_shape(shape=coordinates, srid=WGS84)
         self.properties = properties
@@ -55,10 +73,18 @@ class Road(db.Model):
         self.save()
 
     def save(self) -> None:
+        """
+        Saves the new Road object to the database.
+        """
         db.session.add(self)
         db.session.commit()
 
-    def to_json_obj(self):
+    def to_json_obj(self) -> dict[str, str | dict[str, Any]]:
+        """Returns a JSON representation of the Road object.
+
+        Returns:
+            a dictionary representing this Road as a GEOJson object.
+        """
         return {
             "type": "Feature",
             "properties": self.properties,

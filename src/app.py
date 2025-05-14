@@ -10,7 +10,7 @@ import logging
 from http import HTTPStatus
 
 import geojson
-from flask import abort, make_response, request
+from flask import Response, abort, make_response, request
 from shapely.geometry.geo import shape
 from werkzeug.datastructures import FileStorage
 
@@ -28,6 +28,16 @@ with app.app_context():
 def _create_roads_for_network(
     geo_file: FileStorage, created_road_network: RoadNetwork
 ) -> None:
+    """
+    Create a set of Road based on the passed GeoJSON file for the specified RoadNetwork.
+
+    Args:
+        geo_file: valid GEOJson file.
+        created_road_network: the RoadNetwork to create all the Road for.
+
+    Returns:
+        None
+    """
     # ToDo: Problem package rounds to precision=6 internally, but data have 7 digits.
     geo_json_data = geojson.loads(geo_file.read())
     for geo_road in geo_json_data["features"]:
@@ -52,7 +62,12 @@ def _create_roads_for_network(
 
 # ToDo: Encapsulate geojson file checking and authorization extraction to wrapper.
 @app.post("/")
-def create_road_network():
+def create_road_network() -> Response:
+    """Creates a new RoadNetwork and all the corresponding Roads.
+
+    Returns:
+        Jsonified representation of the created RoadNetwork.
+    """
     if (auth := request.form["authorization"]) is None:
         abort(HTTPStatus.BAD_REQUEST)
     elif (geo_file := request.files["file"]) is None or not geo_file.filename.endswith(
@@ -66,8 +81,16 @@ def create_road_network():
     return make_response(created_road_network.to_json_obj(), HTTPStatus.CREATED)
 
 
-@app.put("/<road_network_id>")
-def update_road_network(road_network_id: int):
+@app.put("/<road_network_id:int>")
+def update_road_network(road_network_id: int) -> Response:
+    """
+    Update the specified RoadNetwork by creating new Roads and marking the old as not up-to-date.
+    Args:
+        road_network_id: The ID of the RoadNetwork object of interest.
+
+    Returns:
+        The Jsonified representation of the RoadNetwork with the updated Roads.
+    """
     if (
         road_network := RoadNetwork.query.filter(
             RoadNetwork.id == road_network_id
@@ -90,7 +113,14 @@ def update_road_network(road_network_id: int):
 
 
 @app.get("/<road_network_id>")
-def get_road_network(road_network_id: int):
+def get_road_network(road_network_id: int) -> Response:
+    """Returns the requested RoadNetwork either in the specified or latest version.
+    Args:
+        road_network_id: The ID of the RoadNetwork of interest.
+
+    Returns:
+        The Jsonified representation of the RoadNetwork either in the specified or latest version.
+    """
     if (
         road_network := RoadNetwork.query.filter(
             RoadNetwork.id == road_network_id
