@@ -35,6 +35,9 @@ def _create_roads_for_network(
         geo_file: valid GEOJson file.
         created_road_network: the RoadNetwork to create all the Road for.
 
+    Raises:
+        NotImplementedError: If geometry's type != LineString will be processed.
+
     Returns:
         None
     """
