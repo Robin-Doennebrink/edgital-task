@@ -10,7 +10,7 @@ from typing import Any, Final
 
 from geoalchemy2 import Geometry
 from geoalchemy2.shape import from_shape, to_shape
-from shapely.geometry import LineString, mapping
+from shapely.geometry import mapping
 from shapely.geometry.base import BaseGeometry
 from sqlalchemy import Column, ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import JSON
