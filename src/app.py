@@ -10,11 +10,12 @@ import json
 import logging
 from http import HTTPStatus
 
+import geojson
 from flask import abort, make_response, request
 from shapely.geometry.geo import shape
 
 from database import app, db
-from models.road import Road  # Keep import to ensure that table will be created
+from models.road import Road  # Keep import to ensure that a table will be created
 from models.road_network import RoadNetwork
 
 logger = logging.getLogger("App")
@@ -38,25 +39,24 @@ def create_road_network():
     ):
         abort(400)
     created_road_network = RoadNetwork(owner=auth)
-    logger.error("!!!!!!!!!")
-    import geojson
-
+    # ToDo: Problem package rounds to precision=6 internally, but data have 7 digits.
     geo_json_data = geojson.loads(geo_file.read())
     for geo_road in geo_json_data["features"]:
-        geometry_data = geo_road["geometry"]
-        logger.error("!!!!!!")
-        logger.error(geometry_data)
-        shape_geometry = shape(geo_road["geometry"])
-        if not shape_geometry.is_valid:
+        geometry_object = shape(geo_road["geometry"])
+        logger.error(f"{type(geometry_object)=}")
+        if not geometry_object.is_valid:
+            logger.info(
+                f"Skip creation of road for {repr(geometry_object)} since it is not valid."
+            )
             continue
-        if shape_geometry.geom_type != "LineString":
+        if geometry_object.geom_type != "LineString":
             raise NotImplementedError(
-                f"Parsing data for {shape_geometry.geom_type} is currently not implemented"
+                f"Parsing data for {geometry_object.geom_type} is currently not implemented"
             )
 
         Road(
             road_network_id=created_road_network.id,
-            coordinates=shape_geometry,
+            coordinates=geometry_object,
             properties=geo_road["properties"],
         )
     return make_response(created_road_network.to_json_obj(), HTTPStatus.CREATED)

@@ -39,7 +39,6 @@ class Road(db.Model):
     ):
         self.road_network_id = road_network_id
         self.coordinates = from_shape(shape=coordinates, srid=WGS84)
-        # self.coordinates = coordinates
         self.properties = properties
         self.save()
 
