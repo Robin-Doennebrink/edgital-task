@@ -24,11 +24,6 @@ with app.app_context():
     logger.info("Created all models successfully")
 
 
-@app.route("/")
-def hello():
-    return RoadNetwork.query.all()
-
-
 @app.post("/")
 def create_road_network():
     if (auth := request.form["authorization"]) is None:
