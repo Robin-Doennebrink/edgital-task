@@ -78,6 +78,12 @@ class RoadNetwork(db.Model):
         return {
             "id": self.id,
             "version": self.version,
+            "type": "FeatureCollection",
+            "name": "geo_drive",
+            "crs": {
+                "type": "name",
+                "properties": {"name": "urn:ogc:def:crs:OGC:1.3:CRS84"},
+            },
             "owner": self.owner,
             "features": [r.to_json_obj() for r in self.roads],
         }

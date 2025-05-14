@@ -84,7 +84,7 @@ def create_road_network() -> Response:
     return make_response(created_road_network.to_json_obj(), HTTPStatus.CREATED)
 
 
-@app.put("/<road_network_id:int>")
+@app.put("/<int:road_network_id>")
 def update_road_network(road_network_id: int) -> Response:
     """
     Update the specified RoadNetwork by creating new Roads and marking the old as not up-to-date.
@@ -115,7 +115,7 @@ def update_road_network(road_network_id: int) -> Response:
     return make_response(created_road_network.to_json_obj(), HTTPStatus.CREATED)
 
 
-@app.get("/<road_network_id>")
+@app.get("/<int: road_network_id>")
 def get_road_network(road_network_id: int) -> Response:
     """Returns the requested RoadNetwork either in the specified or latest version.
     Args:
