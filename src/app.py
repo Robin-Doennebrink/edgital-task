@@ -6,7 +6,6 @@ Created: 13.05.2025
 Copyright: © 2025 Robin Dönnebrink
 """
 
-import json
 import logging
 from http import HTTPStatus
 
