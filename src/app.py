@@ -51,6 +51,7 @@ def create_road_network():
         Road(
             road_network_id=created_road_network.id,
             coordinates=geometry_data["coordinates"],
+            properties=geo_road["properties"],
         )
     return make_response(created_road_network.to_json_obj(), HTTPStatus.CREATED)
 
