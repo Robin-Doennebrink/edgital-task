@@ -50,3 +50,7 @@ The edges of the road networks should be retrievable via an additional endpoint 
 - Activate venv. Depends on OS: Linux: `source ./venv/bin/activate`
 - Install dependencies:  `pip install -r requirements.txt`
 - Set-up pre-commit hooks: `pre-commit install`
+
+## API Usage
+- Create a Bearer token at [JWT.io](http://jwt.io) (Choose sub, name and iat as u want)
+- Copy token to use via Postman / curl

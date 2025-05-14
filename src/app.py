@@ -7,9 +7,11 @@ Copyright: © 2025 Robin Dönnebrink
 """
 
 import logging
+from functools import wraps
 from http import HTTPStatus
 
 import geojson
+import jwt
 from flask import Response, abort, make_response, request
 from shapely.geometry.geo import shape
 from werkzeug.datastructures import FileStorage
@@ -23,6 +25,44 @@ logger = logging.getLogger("App")
 with app.app_context():
     db.create_all()
     logger.info("Created all models successfully")
+
+
+def require_jwt_sub(algorithm: str = "HS256"):
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            auth_header = request.headers.get("Authorization")
+            if not auth_header or not auth_header.startswith("Bearer "):
+                return make_response(
+                    {"error": "Missing or invalid Authorization header"},
+                    HTTPStatus.UNAUTHORIZED,
+                )
+
+            token = auth_header.split(" ")[1]
+            try:
+                # For simplicity: Don't verify signature. If you want to do so, choose the same as during creation at jwt.io
+                payload = jwt.decode(
+                    token, options={"verify_signature": False}, algorithms=[algorithm]
+                )
+                sub = payload.get("sub")
+                if not sub:
+                    return make_response(
+                        {"error": "Missing 'sub' in token payload"},
+                        HTTPStatus.UNAUTHORIZED,
+                    )
+                return f(sub=sub, *args, **kwargs)
+            except jwt.ExpiredSignatureError:
+                return make_response(
+                    {"error": "Token has expired"}, HTTPStatus.UNAUTHORIZED
+                )
+            except jwt.InvalidTokenError:
+                return make_response(
+                    {"error": "Invalid token"}, HTTPStatus.UNAUTHORIZED
+                )
+
+        return wrapper
+
+    return decorator
 
 
 def _create_roads_for_network(
@@ -65,19 +105,21 @@ def _create_roads_for_network(
 
 # ToDo: Encapsulate geojson file checking and authorization extraction to wrapper.
 @app.post("/")
-def create_road_network() -> Response:
+@require_jwt_sub()
+def create_road_network(sub: str) -> Response:
     """Creates a new RoadNetwork and all the corresponding Roads.
+
+    Args:
+        sub: The `sub` claim from the JWT payload.
 
     Returns:
         Jsonified representation of the created RoadNetwork.
     """
-    if (auth := request.form["authorization"]) is None:
-        abort(HTTPStatus.BAD_REQUEST)
-    elif (geo_file := request.files["file"]) is None or not geo_file.filename.endswith(
+    if (geo_file := request.files["file"]) is None or not geo_file.filename.endswith(
         ".geojson"
     ):
         abort(HTTPStatus.BAD_REQUEST)
-    created_road_network = RoadNetwork(owner=auth)
+    created_road_network = RoadNetwork(owner=sub)
     _create_roads_for_network(
         created_road_network=created_road_network, geo_file=geo_file
     )
@@ -85,11 +127,13 @@ def create_road_network() -> Response:
 
 
 @app.put("/<int:road_network_id>")
-def update_road_network(road_network_id: int) -> Response:
+@require_jwt_sub()
+def update_road_network(road_network_id: int, sub: str) -> Response:
     """
     Update the specified RoadNetwork by creating new Roads and marking the old as not up-to-date.
     Args:
         road_network_id: The ID of the RoadNetwork object of interest.
+        sub: The `sub` claim from the JWT payload.
 
     Returns:
         The Jsonified representation of the RoadNetwork with the updated Roads.
@@ -100,15 +144,13 @@ def update_road_network(road_network_id: int) -> Response:
         ).first()
     ) is None:
         abort(HTTPStatus.NOT_FOUND)
-    if (auth := request.form["authorization"]) is None:
-        abort(HTTPStatus.BAD_REQUEST)
     elif (geo_file := request.files["file"]) is None or not geo_file.filename.endswith(
         ".geojson"
     ):
         abort(HTTPStatus.BAD_REQUEST)
-    elif auth != road_network.owner:
+    elif sub != road_network.owner:
         abort(HTTPStatus.UNAUTHORIZED)
-    created_road_network = RoadNetwork(owner=auth, _id=road_network.id)
+    created_road_network = RoadNetwork(owner=sub, _id=road_network.id)
     _create_roads_for_network(
         created_road_network=created_road_network, geo_file=geo_file
     )

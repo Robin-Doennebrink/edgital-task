@@ -8,3 +8,4 @@ Flask-SQLAlchemy==3.1.1
 psycopg2-binary==2.9.10 # binary PostgreSQL adapter for python
 shapely==2.1.0
 geojson==3.2.0
+PyJWT==2.10.1
