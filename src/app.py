@@ -65,6 +65,32 @@ def require_jwt_sub(algorithm: str = "HS256"):
     return decorator
 
 
+def require_geojson_file():
+    """
+    A decorator to ensure that the request contains a valid GeoJSON file.
+    The file should be uploaded as part of the request and have a `.geojson` extension.
+    """
+
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            # Check for the GeoJSON file in the request
+            if (
+                geo_file := request.files.get("file")
+            ) is None or not geo_file.filename.endswith(".geojson"):
+                abort(
+                    code=HTTPStatus.BAD_REQUEST,
+                    description="Invalid or missing GeoJSON file.",
+                )
+
+            # If the file is a valid geo file, pass it to the wrapped function
+            return f(*args, geo_file=geo_file, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
 def _create_roads_for_network(
     geo_file: FileStorage, created_road_network: RoadNetwork
 ) -> None:
@@ -103,22 +129,19 @@ def _create_roads_for_network(
         )
 
 
-# ToDo: Encapsulate geojson file checking and authorization extraction to wrapper.
 @app.post("/")
 @require_jwt_sub()
-def create_road_network(sub: str) -> Response:
+@require_geojson_file()
+def create_road_network(sub: str, geo_file: FileStorage) -> Response:
     """Creates a new RoadNetwork and all the corresponding Roads.
 
     Args:
         sub: The `sub` claim from the JWT payload.
+        geo_file: A GeoJSON file uploaded with the request.
 
     Returns:
         Jsonified representation of the created RoadNetwork.
     """
-    if (geo_file := request.files["file"]) is None or not geo_file.filename.endswith(
-        ".geojson"
-    ):
-        abort(HTTPStatus.BAD_REQUEST)
     created_road_network = RoadNetwork(owner=sub)
     _create_roads_for_network(
         created_road_network=created_road_network, geo_file=geo_file
@@ -128,12 +151,16 @@ def create_road_network(sub: str) -> Response:
 
 @app.put("/<int:road_network_id>")
 @require_jwt_sub()
-def update_road_network(road_network_id: int, sub: str) -> Response:
+@require_geojson_file()
+def update_road_network(
+    road_network_id: int, sub: str, geo_file: FileStorage
+) -> Response:
     """
     Update the specified RoadNetwork by creating new Roads and marking the old as not up-to-date.
     Args:
         road_network_id: The ID of the RoadNetwork object of interest.
         sub: The `sub` claim from the JWT payload.
+        geo_file: A GeoJSON file uploaded with the request.
 
     Returns:
         The Jsonified representation of the RoadNetwork with the updated Roads.
@@ -144,10 +171,6 @@ def update_road_network(road_network_id: int, sub: str) -> Response:
         ).first()
     ) is None:
         abort(HTTPStatus.NOT_FOUND)
-    elif (geo_file := request.files["file"]) is None or not geo_file.filename.endswith(
-        ".geojson"
-    ):
-        abort(HTTPStatus.BAD_REQUEST)
     elif sub != road_network.owner:
         abort(HTTPStatus.UNAUTHORIZED)
     created_road_network = RoadNetwork(owner=sub, _id=road_network.id)
