@@ -89,5 +89,27 @@ def update_road_network(road_network_id: int):
     return make_response(created_road_network.to_json_obj(), HTTPStatus.CREATED)
 
 
+@app.get("/<road_network_id>")
+def get_road_network(road_network_id: int):
+    if (
+        road_network := RoadNetwork.query.filter(
+            RoadNetwork.id == road_network_id
+        ).first()
+    ) is None:
+        abort(HTTPStatus.NOT_FOUND)
+    if (auth := request.form["authorization"]) is None:
+        abort(HTTPStatus.BAD_REQUEST)
+    elif auth != road_network.owner:
+        abort(HTTPStatus.UNAUTHORIZED)
+    version = request.args.get("version")
+    if version is None:
+        # Use the latest version of this network
+        version = road_network.get_max_version_number()
+    network_of_interest = RoadNetwork.query.filter(
+        RoadNetwork.id == road_network.id, RoadNetwork.version == version
+    ).one()
+    return make_response(network_of_interest.to_json_obj(), HTTPStatus.OK)
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)

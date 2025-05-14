@@ -25,7 +25,7 @@ class RoadNetwork(db.Model):
         self.owner = owner
         if _id is not None:
             self.id = _id
-            self.version = self._get_version_number()
+            self.version = self._get_next_version_number()
         else:
             self.id = RoadNetwork._get_next_id()
             self.version = 1
@@ -43,15 +43,19 @@ class RoadNetwork(db.Model):
         db.session.add(self)
         db.session.commit()
 
-    def _get_version_number(self):
-
+    def get_max_version_number(self) -> int:
         max_network = (
             RoadNetwork.query.filter(RoadNetwork.id == self.id)
             .order_by(RoadNetwork.version.desc())
             .first()
         )
 
-        return 1 if max_network is None else max_network.version + 1
+        return 1 if max_network is None else max_network.version
+
+    def _get_next_version_number(self) -> int:
+
+        max_network_version = self.get_max_version_number()
+        return 1 if max_network_version is None else max_network_version + 1
 
     @staticmethod
     def _get_next_id():
