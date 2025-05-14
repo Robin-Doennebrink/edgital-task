@@ -6,14 +6,15 @@ Created: 13.05.2025
 Copyright: © 2025 Robin Dönnebrink
 """
 
-import json
 import logging
 from http import HTTPStatus
 
+import geojson
 from flask import abort, make_response, request
+from shapely.geometry.geo import shape
 
 from database import app, db
-from models.road import Road  # Keep import to ensure that table will be created
+from models.road import Road  # Keep import to ensure that a table will be created
 from models.road_network import RoadNetwork
 
 logger = logging.getLogger("App")
@@ -37,20 +38,23 @@ def create_road_network():
     ):
         abort(400)
     created_road_network = RoadNetwork(owner=auth)
-    geo_json_data = json.loads(geo_file.read())
+    # ToDo: Problem package rounds to precision=6 internally, but data have 7 digits.
+    geo_json_data = geojson.loads(geo_file.read())
     for geo_road in geo_json_data["features"]:
-        logger.error(f"{geo_road.keys()=}")
-        logger.error(f"{geo_road['geometry']=}")
-        logger.error(f"{type(geo_road['geometry'])=}")
-        geometry_data = geo_road["geometry"]
-        if geometry_data["type"] != "LineString":
-            raise NotImplementedError(
-                f"Parsing data for {geometry_data["type"]} is currently not implemented"
+        geometry_object = shape(geo_road["geometry"])
+        if not geometry_object.is_valid:
+            logger.info(
+                f"Skip creation of road for {repr(geometry_object)} since it is not valid."
             )
-        logger.error(type(geometry_data["coordinates"]))
+            continue
+        if geometry_object.geom_type != "LineString":
+            raise NotImplementedError(
+                f"Parsing data for {geometry_object.geom_type} is currently not implemented"
+            )
+
         Road(
             road_network_id=created_road_network.id,
-            coordinates=geometry_data["coordinates"],
+            coordinates=geometry_object,
             properties=geo_road["properties"],
         )
     return make_response(created_road_network.to_json_obj(), HTTPStatus.CREATED)

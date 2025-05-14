@@ -11,6 +11,7 @@ from typing import Any, Final
 from geoalchemy2 import Geometry
 from geoalchemy2.shape import from_shape, to_shape
 from shapely.geometry import LineString, mapping
+from shapely.geometry.base import BaseGeometry
 from sqlalchemy import Column, ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm import relationship
@@ -31,12 +32,13 @@ class Road(db.Model):
     network = relationship("RoadNetwork", back_populates="roads")
 
     def __init__(
-        self, road_network_id: int, coordinates: list, properties: dict[str, Any]
+        self,
+        road_network_id: int,
+        coordinates: BaseGeometry,
+        properties: dict[str, Any],
     ):
         self.road_network_id = road_network_id
-        self.coordinates = from_shape(
-            shape=LineString(coordinates=coordinates), srid=WGS84
-        )
+        self.coordinates = from_shape(shape=coordinates, srid=WGS84)
         self.properties = properties
         self.save()
 
