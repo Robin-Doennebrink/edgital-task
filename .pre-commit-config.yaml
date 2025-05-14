@@ -1,4 +1,6 @@
-﻿repos:
+﻿exclude: '\.geojson$' # Dont change content of geojson files
+
+repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
@@ -17,5 +19,4 @@
     hooks:
     -   id: isort
         name: isort (python)
-
-
+        args: ["--profile", "black", "--filter-files"]
