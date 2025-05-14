@@ -7,18 +7,19 @@ Copyright: © 2025 Robin Dönnebrink
 """
 
 from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import db
 
 
 class RoadNetwork(db.Model):
-    __tablename__ = "road_network"
+    __tablename__ = "road_networks"
 
     id: Mapped[int] = mapped_column(
         primary_key=True, nullable=False, autoincrement=True
     )
     owner: Mapped[str] = mapped_column(String, nullable=False)
+    roads = relationship("Road", back_populates="network", cascade="all, delete-orphan")
 
     def __init__(self, owner: str):
         self.owner = owner
