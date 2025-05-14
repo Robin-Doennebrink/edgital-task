@@ -40,7 +40,7 @@ def require_jwt_sub(algorithm: str = "HS256"):
 
             token = auth_header.split(" ")[1]
             try:
-                # For simplicity: Don't verify signature. If you want to do so, choose the same as during creation at jwt.io
+                # For simplicity: Don't verify signature. If you want to do so, choose the same secret as during creation at jwt.io
                 payload = jwt.decode(
                     token, options={"verify_signature": False}, algorithms=[algorithm]
                 )
