@@ -110,6 +110,6 @@ class RoadNetwork(db.Model):
 
     @staticmethod
     def _get_next_id() -> int:
-        """Determines the next free RoadNetwork.ID."""
+        """Determines the next RoadNetwork.ID."""
         max_network = RoadNetwork.query.order_by(RoadNetwork.id.desc()).first()
-        return 1 if max_network is None else max_network.version + 1
+        return 1 if max_network is None else max_network.id + 1
