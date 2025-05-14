@@ -1,6 +1,6 @@
 # Backend_task_02
 
-## Deutsch 
+## Deutsch
 
 Die Aufgabe setzt sich aus drei Teilaufgaben zusammen, die alle bearbeitet werden müssen. Ziel ist die Erstellung einer einfachen Rest-API zur Verwaltung von Straßennetzen. Zur Aufgabenbearbeitung befinden sich hierzu beigefügt drei Beispiel-Straßennetze (Knoten-Kanten-Modelle) im GeoJSON-Format.
 
@@ -49,3 +49,4 @@ The edges of the road networks should be retrievable via an additional endpoint 
 - Create venv in root dir: `python -m venv ./venv`
 - Activate venv. Depends on OS: Linux: `source ./venv/bin/activate`
 - Install dependencies:  `pip install -r requirements.txt`
+- Set-up pre-commit hooks: `pre-commit install`
