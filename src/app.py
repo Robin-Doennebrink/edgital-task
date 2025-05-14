@@ -43,7 +43,6 @@ def create_road_network():
     geo_json_data = geojson.loads(geo_file.read())
     for geo_road in geo_json_data["features"]:
         geometry_object = shape(geo_road["geometry"])
-        logger.error(f"{type(geometry_object)=}")
         if not geometry_object.is_valid:
             logger.info(
                 f"Skip creation of road for {repr(geometry_object)} since it is not valid."
