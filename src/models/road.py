@@ -9,8 +9,8 @@ Copyright: © 2025 Robin Dönnebrink
 from typing import Final
 
 from geoalchemy2 import Geometry
-from geoalchemy2.shape import from_shape
-from shapely.geometry import LineString
+from geoalchemy2.shape import from_shape, to_shape
+from shapely.geometry import LineString, mapping
 from sqlalchemy import Column, ForeignKey, Integer
 from sqlalchemy.orm import relationship
 
@@ -39,3 +39,6 @@ class Road(db.Model):
     def save(self) -> None:
         db.session.add(self)
         db.session.commit()
+
+    def to_json_obj(self):
+        return {"type": "Feature", "geometry": mapping(to_shape(self.coordinates))}

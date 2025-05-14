@@ -26,7 +26,11 @@ class RoadNetwork(db.Model):
         self.save()
 
     def to_json_obj(self) -> dict[str, int | str]:
-        return {"id": self.id, "owner": self.owner}
+        return {
+            "id": self.id,
+            "owner": self.owner,
+            "features": [r.to_json_obj() for r in self.roads],
+        }
 
     def save(self) -> None:
         db.session.add(self)
