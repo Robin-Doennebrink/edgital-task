@@ -11,6 +11,7 @@ import logging
 from http import HTTPStatus
 
 from flask import abort, make_response, request
+from shapely.geometry.geo import shape
 
 from database import app, db
 from models.road import Road  # Keep import to ensure that table will be created
@@ -37,20 +38,25 @@ def create_road_network():
     ):
         abort(400)
     created_road_network = RoadNetwork(owner=auth)
-    geo_json_data = json.loads(geo_file.read())
+    logger.error("!!!!!!!!!")
+    import geojson
+
+    geo_json_data = geojson.loads(geo_file.read())
     for geo_road in geo_json_data["features"]:
-        logger.error(f"{geo_road.keys()=}")
-        logger.error(f"{geo_road['geometry']=}")
-        logger.error(f"{type(geo_road['geometry'])=}")
         geometry_data = geo_road["geometry"]
-        if geometry_data["type"] != "LineString":
+        logger.error("!!!!!!")
+        logger.error(geometry_data)
+        shape_geometry = shape(geo_road["geometry"])
+        if not shape_geometry.is_valid:
+            continue
+        if shape_geometry.geom_type != "LineString":
             raise NotImplementedError(
-                f"Parsing data for {geometry_data["type"]} is currently not implemented"
+                f"Parsing data for {shape_geometry.geom_type} is currently not implemented"
             )
-        logger.error(type(geometry_data["coordinates"]))
+
         Road(
             road_network_id=created_road_network.id,
-            coordinates=geometry_data["coordinates"],
+            coordinates=shape_geometry,
             properties=geo_road["properties"],
         )
     return make_response(created_road_network.to_json_obj(), HTTPStatus.CREATED)
