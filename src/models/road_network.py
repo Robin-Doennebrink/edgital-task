@@ -25,7 +25,7 @@ class RoadNetwork(db.Model):
         self.owner = owner
         self.save()
 
-    def to_json_obj(self) -> dict[str, int | str]:
+    def to_json_obj(self) -> dict[str, int | str | dict]:
         return {
             "id": self.id,
             "owner": self.owner,
