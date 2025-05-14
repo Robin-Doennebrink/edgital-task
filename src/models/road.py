@@ -33,7 +33,6 @@ class Road(db.Model):
     def __init__(
         self, road_network_id: int, coordinates: list, properties: dict[str, Any]
     ):
-        # ToDo: Add property properties
         self.road_network_id = road_network_id
         self.coordinates = from_shape(
             shape=LineString(coordinates=coordinates), srid=WGS84
