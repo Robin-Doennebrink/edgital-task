@@ -58,7 +58,7 @@ def _create_roads_for_network(
         Road(
             road_network_id=created_road_network.id,
             road_network_version=created_road_network.version,
-            coordinates=geometry_object,
+            line_geometry=geometry_object,
             properties=geo_road["properties"],
         )
 
@@ -115,7 +115,7 @@ def update_road_network(road_network_id: int) -> Response:
     return make_response(created_road_network.to_json_obj(), HTTPStatus.CREATED)
 
 
-@app.get("/<int: road_network_id>")
+@app.get("/<int:road_network_id>")
 def get_road_network(road_network_id: int) -> Response:
     """Returns the requested RoadNetwork either in the specified or latest version.
     Args:

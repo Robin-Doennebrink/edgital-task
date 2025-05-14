@@ -27,7 +27,7 @@ class Road(db.Model):
     - id: The primary key
     - road_network_id: Stores the ID of the RoadNetwork it belongs to.
     - road_network_version: Stores the version of the RoadNetwork it belongs to.
-    - coordinates: The geospatial data of this Road.
+    - line_geometry: The geospatial data of this Road.
     - properties: Additional properties to store for this Route.
 
     """
@@ -37,7 +37,7 @@ class Road(db.Model):
     id = Column(Integer, primary_key=True)
     road_network_id = Column(Integer, nullable=False)
     road_network_version = Column(Integer, nullable=False)
-    coordinates = Column(Geometry(geometry_type="LINESTRING", srid=WGS84))
+    line_geometry = Column(Geometry(geometry_type="LINESTRING", srid=WGS84))
     properties = Column(JSON, nullable=False)
 
     network = relationship("RoadNetwork", back_populates="roads")
@@ -54,7 +54,7 @@ class Road(db.Model):
         self,
         road_network_id: int,
         road_network_version: int,
-        coordinates: BaseGeometry,
+        line_geometry: BaseGeometry,
         properties: dict[str, Any],
     ):
         """
@@ -63,11 +63,11 @@ class Road(db.Model):
         Args:
             road_network_id: The ID of the RoadNetwork it belongs to.
             road_network_version:  the version of the RoadNetwork it belongs to.
-            coordinates:  The geospatial data of this Road.
+            line_geometry:  The geospatial data of this Road.
             properties: Additional properties to store for this Route.
         """
         self.road_network_id = road_network_id
-        self.coordinates = from_shape(shape=coordinates, srid=WGS84)
+        self.line_geometry = from_shape(shape=line_geometry, srid=WGS84)
         self.properties = properties
         self.road_network_version = road_network_version
         self.save()
@@ -88,5 +88,5 @@ class Road(db.Model):
         return {
             "type": "Feature",
             "properties": self.properties,
-            "geometry": mapping(to_shape(self.coordinates)),
+            "geometry": mapping(to_shape(self.line_geometry)),
         }
