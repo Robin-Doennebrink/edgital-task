@@ -52,5 +52,5 @@ The edges of the road networks should be retrievable via an additional endpoint 
 - Set-up pre-commit hooks: `pre-commit install`
 
 ## API Usage
-- Create a Bearer token at [JWT.io](http://jwt.io) (Choose sub, name and iat as u want)
+- Create a Bearer token at [JWT.io](http://jwt.io) (Choose sub, name and iat as u want and **secret=42**)
 - Copy token to use via Postman / curl

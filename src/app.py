@@ -9,6 +9,7 @@ Copyright: © 2025 Robin Dönnebrink
 import logging
 from functools import wraps
 from http import HTTPStatus
+from typing import Final
 
 import geojson
 import jwt
@@ -22,12 +23,14 @@ from models.road_network import RoadNetwork
 
 logger = logging.getLogger("App")
 
+SECRET: Final[str] = "42"  # Use the same as at jwt.io
+
 with app.app_context():
     db.create_all()
     logger.info("Created all models successfully")
 
 
-def require_jwt_sub(algorithm: str = "HS256"):
+def require_jwt_sub():
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
@@ -40,10 +43,7 @@ def require_jwt_sub(algorithm: str = "HS256"):
 
             token = auth_header.split(" ")[1]
             try:
-                # For simplicity: Don't verify signature. If you want to do so, choose the same secret as during creation at jwt.io
-                payload = jwt.decode(
-                    token, options={"verify_signature": False}, algorithms=[algorithm]
-                )
+                payload = jwt.decode(token, SECRET, algorithms=["HS256"])
                 sub = payload.get("sub")
                 if not sub:
                     return make_response(
@@ -55,7 +55,8 @@ def require_jwt_sub(algorithm: str = "HS256"):
                 return make_response(
                     {"error": "Token has expired"}, HTTPStatus.UNAUTHORIZED
                 )
-            except jwt.InvalidTokenError:
+            except jwt.InvalidTokenError as e:
+                logger.error(e)
                 return make_response(
                     {"error": "Invalid token"}, HTTPStatus.UNAUTHORIZED
                 )
