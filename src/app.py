@@ -98,11 +98,13 @@ def require_road_network():
 
     def decorator(f):
         @wraps(f)
-        def wrapper(road_network_id, *args, **kwargs):
+        def wrapper(road_network_id, sub, *args, **kwargs):
             road_network = RoadNetwork.query.filter_by(id=road_network_id).first()
             if road_network is None:
                 abort(HTTPStatus.NOT_FOUND, description="Road network not found.")
-            return f(road_network=road_network, *args, **kwargs)
+            if sub != road_network.owner:
+                abort(HTTPStatus.UNAUTHORIZED)
+            return f(road_network=road_network, sub=sub, *args, **kwargs)
 
         return wrapper
 
@@ -184,8 +186,6 @@ def update_road_network(
     Returns:
         The Jsonified representation of the RoadNetwork with the updated Roads.
     """
-    if sub != road_network.owner:
-        abort(HTTPStatus.UNAUTHORIZED)
     created_road_network = RoadNetwork(owner=sub, _id=road_network.id)
     _create_roads_for_network(
         created_road_network=created_road_network, geo_file=geo_file
@@ -205,8 +205,6 @@ def get_road_network(sub: str, road_network: RoadNetwork) -> Response:
     Returns:
         The Jsonified representation of the RoadNetwork either in the specified or latest version.
     """
-    if sub != road_network.owner:
-        abort(HTTPStatus.UNAUTHORIZED)
     version = request.args.get("version")
     if version is None:
         # Use the latest version of this network
