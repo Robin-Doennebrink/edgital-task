@@ -194,23 +194,18 @@ def update_road_network(
 
 
 @app.get("/<int:road_network_id>")
-def get_road_network(road_network_id: int) -> Response:
+@require_jwt_sub()
+@require_road_network()
+def get_road_network(sub: str, road_network: RoadNetwork) -> Response:
     """Returns the requested RoadNetwork either in the specified or latest version.
     Args:
-        road_network_id: The ID of the RoadNetwork of interest.
+        sub: The `sub` claim from the JWT payload.
+        road_network: The RoadNetwork instance read from the database and id read from URL
 
     Returns:
         The Jsonified representation of the RoadNetwork either in the specified or latest version.
     """
-    if (
-        road_network := RoadNetwork.query.filter(
-            RoadNetwork.id == road_network_id
-        ).first()
-    ) is None:
-        abort(HTTPStatus.NOT_FOUND)
-    if (auth := request.form["authorization"]) is None:
-        abort(HTTPStatus.BAD_REQUEST)
-    elif auth != road_network.owner:
+    if sub != road_network.owner:
         abort(HTTPStatus.UNAUTHORIZED)
     version = request.args.get("version")
     if version is None:
