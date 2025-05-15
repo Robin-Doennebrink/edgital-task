@@ -91,6 +91,24 @@ def require_geojson_file():
     return decorator
 
 
+def require_road_network():
+    """
+    Decorator that retrieves a RoadNetwork by ID from the database. If not found, aborts with 404.
+    """
+
+    def decorator(f):
+        @wraps(f)
+        def wrapper(road_network_id, *args, **kwargs):
+            road_network = RoadNetwork.query.filter_by(id=road_network_id).first()
+            if road_network is None:
+                abort(HTTPStatus.NOT_FOUND, description="Road network not found.")
+            return f(road_network=road_network, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
 def _create_roads_for_network(
     geo_file: FileStorage, created_road_network: RoadNetwork
 ) -> None:
@@ -152,26 +170,21 @@ def create_road_network(sub: str, geo_file: FileStorage) -> Response:
 @app.put("/<int:road_network_id>")
 @require_jwt_sub()
 @require_geojson_file()
+@require_road_network()
 def update_road_network(
-    road_network_id: int, sub: str, geo_file: FileStorage
+    sub: str, geo_file: FileStorage, road_network: RoadNetwork
 ) -> Response:
     """
-    Update the specified RoadNetwork by creating new Roads and marking the old as not up-to-date.
+    Update the specified RoadNetwork by creating new Roads and marking the old as not up to date.
     Args:
-        road_network_id: The ID of the RoadNetwork object of interest.
         sub: The `sub` claim from the JWT payload.
         geo_file: A GeoJSON file uploaded with the request.
+        road_network: The RoadNetwork instance read from the database and id read from URL
 
     Returns:
         The Jsonified representation of the RoadNetwork with the updated Roads.
     """
-    if (
-        road_network := RoadNetwork.query.filter(
-            RoadNetwork.id == road_network_id
-        ).first()
-    ) is None:
-        abort(HTTPStatus.NOT_FOUND)
-    elif sub != road_network.owner:
+    if sub != road_network.owner:
         abort(HTTPStatus.UNAUTHORIZED)
     created_road_network = RoadNetwork(owner=sub, _id=road_network.id)
     _create_roads_for_network(
