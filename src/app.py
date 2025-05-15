@@ -212,7 +212,9 @@ def get_road_network(sub: str, road_network: RoadNetwork) -> Response:
         version = road_network.get_max_version_number()
     network_of_interest = RoadNetwork.query.filter(
         RoadNetwork.id == road_network.id, RoadNetwork.version == version
-    ).one()
+    ).one_or_none()
+    if network_of_interest is None:
+        abort(HTTPStatus.NOT_FOUND, "RoadNetwork not found")
     return make_response(network_of_interest.to_json_obj(), HTTPStatus.OK)
 
 
